@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stat Tracker</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #dc2626 0%, #ffffff 50%, #dc2626 100%);
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      padding: 30px 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      border: 3px solid #dc2626;
+    }
+
+    .header h1 {
+      margin: 0;
+      color: #dc2626;
+      font-size: 42px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 150px;
+      padding: 15px 20px;
+      background: white;
+      border: 3px solid #dc2626;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: bold;
+      color: #dc2626;
+      transition: all 0.3s ease;
+    }
+
+    .tab:hover {
+      background: #fef2f2;
+    }
+
+    .tab.active {
+      background: #dc2626;
+      color: white;
+    }
+
+    .content-section {
+      display: none;
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      border: 3px solid #dc2626;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    .form-section {
+      background: #fef2f2;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      border: 2px solid #dc2626;
+    }
+
+    .form-section h2 {
+      margin-top: 0;
+      color: #dc2626;
+      font-size: 24px;
+      border-bottom: 2px solid #dc2626;
+      padding-bottom: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-weight: bold;
+      color: #991b1b;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      padding: 10px;
+      border: 2px solid #dc2626;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #991b1b;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #991b1b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .stats-summary {
+      background: #dc2626;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
+
+    .stats-summary h3 {
+      margin-top: 0;
+      font-size: 22px;
+      border-bottom: 2px solid white;
+      padding-bottom: 10px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .stat-card {
+      background: white;
+      color: #dc2626;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .stat-card .label {
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .entries-list {
+      margin-top: 20px;
+    }
+
+    .entries-list h3 {
+      color: #dc2626;
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+
+    .entry-card {
+      background: #fef2f2;
+      border: 2px solid #dc2626;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .entry-date {
+      font-weight: bold;
+      color: #dc2626;
+      font-size: 16px;
+    }
+
+    .entry-stats {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .entry-stat {
+      font-size: 14px;
+      color: #991b1b;
+    }
+
+    .btn-delete {
+      padding: 8px 16px;
+      background: #991b1b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-delete:hover {
+      background: #7f1d1d;
+    }
+
+    .btn-delete:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #991b1b;
+    }
+
+    .empty-state p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    .warning-message {
+      background: #fef2f2;
+      border: 2px solid #dc2626;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      color: #991b1b;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container">
+   <div class="header">
+    <h1 id="app-title">⚾ Stat Tracker</h1>
+   </div>
+   <div id="limit-warning" class="warning-message" style="display: none;">
+    Maximum limit of 999 entries reached. Please delete some entries to add more.
+   </div>
+   <div class="tabs">
+    <div class="tab active" data-tab="hitting">
+     <span id="hitting-tab-title">Hitting Stats</span>
+    </div>
+    <div class="tab" data-tab="pitching">
+     <span id="pitching-tab-title">Pitching Stats</span>
+    </div>
+    <div class="tab" data-tab="fielding">
+     <span id="fielding-tab-title">Fielding Stats</span>
+    </div>
+   </div>
+   <div id="hitting" class="content-section active">
+    <div class="stats-summary">
+     <h3>Career Hitting Statistics</h3>
+     <div class="stats-grid">
+      <div class="stat-card">
+       <div class="label">
+        Batting Average
+       </div>
+       <div class="value" id="batting-avg">
+        .000
+       </div>
+      </div>
+      <div class="stat-card">
+       <div class="label">
+        Strikeout %
+       </div>
+       <div class="value" id="strikeout-pct">
+        0%
+       </div>
+      </div>
+      <div class="stat-card">
+       <div class="label">
+        BB/K
+       </div>
+       <div class="value" id="bb-k-ratio">
+        0.00
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="form-section">
+     <h2>Add Hitting Entry</h2>
+     <form id="hitting-form">
+      <div class="form-grid">
+       <div class="form-group"><label for="hitting-date">Date</label> <input type="date" id="hitting-date" required>
+       </div>
+       <div class="form-group"><label for="hits">Hits</label> <input type="number" id="hits" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="at-bats">At Bats</label> <input type="number" id="at-bats" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="strikeouts-hitting">Strikeouts</label> <input type="number" id="strikeouts-hitting" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="strikeouts-looking">Strikeouts Looking</label> <input type="number" id="strikeouts-looking" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="walks-hitting">Walks</label> <input type="number" id="walks-hitting" min="0" step="1" required>
+       </div>
+      </div><button type="submit" class="btn" id="hitting-submit">Add Entry</button>
+     </form>
+    </div>
+    <div class="entries-list">
+     <h3>Recent Entries</h3>
+     <div id="hitting-entries"></div>
+    </div>
+   </div>
+   <div id="pitching" class="content-section">
+    <div class="stats-summary">
+     <h3>Career Pitching Statistics</h3>
+     <div class="stats-grid">
+      <div class="stat-card">
+       <div class="label">
+        ERA
+       </div>
+       <div class="value" id="era">
+        0.00
+       </div>
+      </div>
+      <div class="stat-card">
+       <div class="label">
+        K/9 (Pitcher)
+       </div>
+       <div class="value" id="k-per-nine-pitcher">
+        0.0
+       </div>
+      </div>
+      <div class="stat-card">
+       <div class="label">
+        WHIP
+       </div>
+       <div class="value" id="whip">
+        0.00
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="form-section">
+     <h2>Add Pitching Entry</h2>
+     <form id="pitching-form">
+      <div class="form-grid">
+       <div class="form-group"><label for="pitching-date">Date</label> <input type="date" id="pitching-date" required>
+       </div>
+       <div class="form-group"><label for="innings-pitched">Innings Pitched</label> <input type="number" id="innings-pitched" min="0" step="0.1" required>
+       </div>
+       <div class="form-group"><label for="hits-allowed">Hits Allowed</label> <input type="number" id="hits-allowed" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="earned-runs">Earned Runs</label> <input type="number" id="earned-runs" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="total-runs">Total Runs</label> <input type="number" id="total-runs" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="walks">Walks</label> <input type="number" id="walks" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="strikeouts-pitching">Strikeouts</label> <input type="number" id="strikeouts-pitching" min="0" step="1" required>
+       </div>
+      </div><button type="submit" class="btn" id="pitching-submit">Add Entry</button>
+     </form>
+    </div>
+    <div class="entries-list">
+     <h3>Recent Entries</h3>
+     <div id="pitching-entries"></div>
+    </div>
+   </div>
+   <div id="fielding" class="content-section">
+    <div class="stats-summary">
+     <h3>Career Fielding Statistics</h3>
+     <div class="stats-grid">
+      <div class="stat-card">
+       <div class="label">
+        Fielding %
+       </div>
+       <div class="value" id="fielding-pct">
+        .000
+       </div>
+      </div>
+      <div class="stat-card">
+       <div class="label">
+        Total Chances
+       </div>
+       <div class="value" id="total-chances-stat">
+        0
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="form-section">
+     <h2>Add Fielding Entry</h2>
+     <form id="fielding-form">
+      <div class="form-grid">
+       <div class="form-group"><label for="fielding-date">Date</label> <input type="date" id="fielding-date" required>
+       </div>
+       <div class="form-group"><label for="put-outs">Put Outs</label> <input type="number" id="put-outs" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="assists">Assists</label> <input type="number" id="assists" min="0" step="1" required>
+       </div>
+       <div class="form-group"><label for="errors">Errors</label> <input type="number" id="errors" min="0" step="1" required>
+       </div>
+      </div><button type="submit" class="btn" id="fielding-submit">Add Entry</button>
+     </form>
+    </div>
+    <div class="entries-list">
+     <h3>Recent Entries</h3>
+     <div id="fielding-entries"></div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      app_title: "⚾ Stat Tracker",
+      hitting_title: "Hitting Stats",
+      pitching_title: "Pitching Stats",
+      fielding_title: "Fielding Stats",
+      primary_color: "#dc2626",
+      background_color: "#ffffff",
+      text_color: "#991b1b",
+      button_color: "#dc2626",
+      accent_color: "#fef2f2"
+    };
+
+    let allData = [];
+    let currentRecordCount = 0;
+
+    const dataHandler = {
+      onDataChanged(data) {
+        allData = data;
+        currentRecordCount = data.length;
+        
+        if (currentRecordCount >= 999) {
+          document.getElementById('limit-warning').style.display = 'block';
+        } else {
+          document.getElementById('limit-warning').style.display = 'none';
+        }
+        
+        updateAllStats();
+        renderAllEntries();
+      }
+    };
+
+    async function onConfigChange(config) {
+      document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+      document.getElementById('hitting-tab-title').textContent = config.hitting_title || defaultConfig.hitting_title;
+      document.getElementById('pitching-tab-title').textContent = config.pitching_title || defaultConfig.pitching_title;
+      document.getElementById('fielding-tab-title').textContent = config.fielding_title || defaultConfig.fielding_title;
+      
+      const primaryColor = config.primary_color || defaultConfig.primary_color;
+      const backgroundColor = config.background_color || defaultConfig.background_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const buttonColor = config.button_color || defaultConfig.button_color;
+      const accentColor = config.accent_color || defaultConfig.accent_color;
+      
+      document.body.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${backgroundColor} 50%, ${primaryColor} 100%)`;
+      
+      document.querySelectorAll('.header').forEach(el => {
+        el.style.borderColor = primaryColor;
+      });
+      
+      document.querySelectorAll('.header h1').forEach(el => {
+        el.style.color = primaryColor;
+      });
+      
+      document.querySelectorAll('.tab').forEach(el => {
+        el.style.borderColor = primaryColor;
+        el.style.color = primaryColor;
+      });
+      
+      document.querySelectorAll('.tab.active').forEach(el => {
+        el.style.backgroundColor = primaryColor;
+        el.style.color = backgroundColor;
+      });
+      
+      document.querySelectorAll('.content-section').forEach(el => {
+        el.style.borderColor = primaryColor;
+      });
+      
+      document.querySelectorAll('.form-section').forEach(el => {
+        el.style.backgroundColor = accentColor;
+        el.style.borderColor = primaryColor;
+      });
+      
+      document.querySelectorAll('.form-section h2').forEach(el => {
+        el.style.color = primaryColor;
+        el.style.borderColor = primaryColor;
+      });
+      
+      document.querySelectorAll('.form-group label').forEach(el => {
+        el.style.color = textColor;
+      });
+      
+      document.querySelectorAll('.form-group input').forEach(el => {
+        el.style.borderColor = primaryColor;
+      });
+      
+      document.querySelectorAll('.btn').forEach(el => {
+        el.style.backgroundColor = buttonColor;
+      });
+      
+      document.querySelectorAll('.stats-summary').forEach(el => {
+        el.style.backgroundColor = primaryColor;
+      });
+      
+      document.querySelectorAll('.stat-card').forEach(el => {
+        el.style.color = primaryColor;
+      });
+      
+      document.querySelectorAll('.entries-list h3').forEach(el => {
+        el.style.color = primaryColor;
+      });
+      
+      document.querySelectorAll('.entry-card').forEach(el => {
+        el.style.backgroundColor = accentColor;
+        el.style.borderColor = primaryColor;
+      });
+      
+      document.querySelectorAll('.entry-date').forEach(el => {
+        el.style.color = primaryColor;
+      });
+      
+      document.querySelectorAll('.entry-stat').forEach(el => {
+        el.style.color = textColor;
+      });
+      
+      document.querySelectorAll('.warning-message').forEach(el => {
+        el.style.backgroundColor = accentColor;
+        el.style.borderColor = primaryColor;
+        el.style.color = textColor;
+      });
+    }
+
+    async function initializeApp() {
+      const initResult = await window.dataSdk.init(dataHandler);
+      if (!initResult.isOk) {
+        console.error("Failed to initialize data SDK");
+        return;
+      }
+
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities: (config) => ({
+            recolorables: [
+              {
+                get: () => config.primary_color || defaultConfig.primary_color,
+                set: (value) => {
+                  config.primary_color = value;
+                  window.elementSdk.setConfig({ primary_color: value });
+                }
+              },
+              {
+                get: () => config.background_color || defaultConfig.background_color,
+                set: (value) => {
+                  config.background_color = value;
+                  window.elementSdk.setConfig({ background_color: value });
+                }
+              },
+              {
+                get: () => config.text_color || defaultConfig.text_color,
+                set: (value) => {
+                  config.text_color = value;
+                  window.elementSdk.setConfig({ text_color: value });
+                }
+              },
+              {
+                get: () => config.button_color || defaultConfig.button_color,
+                set: (value) => {
+                  config.button_color = value;
+                  window.elementSdk.setConfig({ button_color: value });
+                }
+              },
+              {
+                get: () => config.accent_color || defaultConfig.accent_color,
+                set: (value) => {
+                  config.accent_color = value;
+                  window.elementSdk.setConfig({ accent_color: value });
+                }
+              }
+            ],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ["app_title", config.app_title || defaultConfig.app_title],
+            ["hitting_title", config.hitting_title || defaultConfig.hitting_title],
+            ["pitching_title", config.pitching_title || defaultConfig.pitching_title],
+            ["fielding_title", config.fielding_title || defaultConfig.fielding_title]
+          ])
+        });
+      }
+
+      setupTabs();
+      setupForms();
+      setDefaultDates();
+    }
+
+    function setupTabs() {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.dataset.tab;
+          
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+          
+          tab.classList.add('active');
+          document.getElementById(targetTab).classList.add('active');
+        });
+      });
+    }
+
+    function setupForms() {
+      document.getElementById('hitting-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (currentRecordCount >= 999) {
+          return;
+        }
+        
+        const submitBtn = document.getElementById('hitting-submit');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Adding...';
+        
+        const result = await window.dataSdk.create({
+          id: Date.now().toString(),
+          date: document.getElementById('hitting-date').value,
+          category: 'hitting',
+          hits: parseFloat(document.getElementById('hits').value),
+          atBats: parseFloat(document.getElementById('at-bats').value),
+          strikeouts: parseFloat(document.getElementById('strikeouts-hitting').value),
+          strikeoutsLooking: parseFloat(document.getElementById('strikeouts-looking').value),
+          walks: parseFloat(document.getElementById('walks-hitting').value),
+          putOuts: 0,
+          assists: 0,
+          errors: 0,
+          inningsPitched: 0,
+          hitsAllowed: 0,
+          earnedRunsAllowed: 0,
+          totalRunsAllowed: 0,
+          strikeoutsPitching: 0
+        });
+        
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Entry';
+        
+        if (result.isOk) {
+          document.getElementById('hitting-form').reset();
+          setDefaultDates();
+        }
+      });
+
+      document.getElementById('pitching-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (currentRecordCount >= 999) {
+          return;
+        }
+        
+        const submitBtn = document.getElementById('pitching-submit');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Adding...';
+        
+        const result = await window.dataSdk.create({
+          id: Date.now().toString(),
+          date: document.getElementById('pitching-date').value,
+          category: 'pitching',
+          inningsPitched: parseFloat(document.getElementById('innings-pitched').value),
+          hitsAllowed: parseFloat(document.getElementById('hits-allowed').value),
+          earnedRunsAllowed: parseFloat(document.getElementById('earned-runs').value),
+          totalRunsAllowed: parseFloat(document.getElementById('total-runs').value),
+          walks: parseFloat(document.getElementById('walks').value),
+          strikeoutsPitching: parseFloat(document.getElementById('strikeouts-pitching').value),
+          hits: 0,
+          atBats: 0,
+          strikeouts: 0,
+          strikeoutsLooking: 0,
+          putOuts: 0,
+          assists: 0,
+          errors: 0
+        });
+        
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Entry';
+        
+        if (result.isOk) {
+          document.getElementById('pitching-form').reset();
+          setDefaultDates();
+        }
+      });
+
+      document.getElementById('fielding-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (currentRecordCount >= 999) {
+          return;
+        }
+        
+        const submitBtn = document.getElementById('fielding-submit');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Adding...';
+        
+        const result = await window.dataSdk.create({
+          id: Date.now().toString(),
+          date: document.getElementById('fielding-date').value,
+          category: 'fielding',
+          putOuts: parseFloat(document.getElementById('put-outs').value),
+          assists: parseFloat(document.getElementById('assists').value),
+          errors: parseFloat(document.getElementById('errors').value),
+          hits: 0,
+          atBats: 0,
+          strikeouts: 0,
+          strikeoutsLooking: 0,
+          inningsPitched: 0,
+          hitsAllowed: 0,
+          earnedRunsAllowed: 0,
+          totalRunsAllowed: 0,
+          walks: 0,
+          strikeoutsPitching: 0
+        });
+        
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Entry';
+        
+        if (result.isOk) {
+          document.getElementById('fielding-form').reset();
+          setDefaultDates();
+        }
+      });
+    }
+
+    function setDefaultDates() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('hitting-date').value = today;
+      document.getElementById('pitching-date').value = today;
+      document.getElementById('fielding-date').value = today;
+    }
+
+    function updateAllStats() {
+      const hittingData = allData.filter(d => d.category === 'hitting');
+      const pitchingData = allData.filter(d => d.category === 'pitching');
+      const fieldingData = allData.filter(d => d.category === 'fielding');
+
+      const totalHits = hittingData.reduce((sum, d) => sum + d.hits, 0);
+      const totalAtBats = hittingData.reduce((sum, d) => sum + d.atBats, 0);
+      const totalStrikeouts = hittingData.reduce((sum, d) => sum + d.strikeouts, 0);
+      const totalWalksHitting = hittingData.reduce((sum, d) => sum + (d.walks || 0), 0);
+      
+      const battingAvg = totalAtBats > 0 ? (totalHits / totalAtBats).toFixed(3) : '.000';
+      const strikeoutPct = totalAtBats > 0 ? ((totalStrikeouts / totalAtBats) * 100).toFixed(1) : '0';
+      const bbkRatio = totalStrikeouts > 0 ? (totalWalksHitting / totalStrikeouts).toFixed(2) : '0.00';
+      
+      document.getElementById('batting-avg').textContent = battingAvg;
+      document.getElementById('strikeout-pct').textContent = strikeoutPct + '%';
+      document.getElementById('bb-k-ratio').textContent = bbkRatio;
+
+      const totalInnings = pitchingData.reduce((sum, d) => sum + d.inningsPitched, 0);
+      const totalEarnedRuns = pitchingData.reduce((sum, d) => sum + d.earnedRunsAllowed, 0);
+      const totalStrikeoutsPitching = pitchingData.reduce((sum, d) => sum + d.strikeoutsPitching, 0);
+      const totalWalksPitching = pitchingData.reduce((sum, d) => sum + d.walks, 0);
+      const totalHitsAllowed = pitchingData.reduce((sum, d) => sum + d.hitsAllowed, 0);
+      
+      const era = totalInnings > 0 ? ((totalEarnedRuns / totalInnings) * 9).toFixed(2) : '0.00';
+      const kPerNinePitcher = totalInnings > 0 ? ((totalStrikeoutsPitching / totalInnings) * 9).toFixed(1) : '0.0';
+      const whip = totalInnings > 0 ? ((totalWalksPitching + totalHitsAllowed) / totalInnings).toFixed(2) : '0.00';
+      
+      document.getElementById('era').textContent = era;
+      document.getElementById('k-per-nine-pitcher').textContent = kPerNinePitcher;
+      document.getElementById('whip').textContent = whip;
+
+      const totalPutOuts = fieldingData.reduce((sum, d) => sum + (d.putOuts || 0), 0);
+      const totalAssists = fieldingData.reduce((sum, d) => sum + (d.assists || 0), 0);
+      const totalErrors = fieldingData.reduce((sum, d) => sum + (d.errors || 0), 0);
+      const totalFieldingChances = totalPutOuts + totalAssists + totalErrors;
+      
+      const fieldingPct = totalFieldingChances > 0 ? ((totalPutOuts + totalAssists) / totalFieldingChances).toFixed(3) : '.000';
+      
+      document.getElementById('fielding-pct').textContent = fieldingPct;
+      document.getElementById('total-chances-stat').textContent = totalFieldingChances;
+    }
+
+    function renderAllEntries() {
+      renderEntries('hitting');
+      renderEntries('pitching');
+      renderEntries('fielding');
+    }
+
+    function renderEntries(category) {
+      const container = document.getElementById(`${category}-entries`);
+      const entries = allData.filter(d => d.category === category).sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      if (entries.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>⚾ No entries yet</p><p>Add your first stat entry above!</p></div>';
+        return;
+      }
+      
+      container.innerHTML = entries.map(entry => {
+        let statsHtml = '';
+        
+        if (category === 'hitting') {
+          statsHtml = `
+            <span class="entry-stat">Hits: ${entry.hits}</span>
+            <span class="entry-stat">At Bats: ${entry.atBats}</span>
+            <span class="entry-stat">K: ${entry.strikeouts}</span>
+            <span class="entry-stat">K Looking: ${entry.strikeoutsLooking}</span>
+            <span class="entry-stat">BB: ${entry.walks || 0}</span>
+          `;
+        } else if (category === 'pitching') {
+          statsHtml = `
+            <span class="entry-stat">IP: ${entry.inningsPitched}</span>
+            <span class="entry-stat">H: ${entry.hitsAllowed}</span>
+            <span class="entry-stat">ER: ${entry.earnedRunsAllowed}</span>
+            <span class="entry-stat">R: ${entry.totalRunsAllowed}</span>
+            <span class="entry-stat">BB: ${entry.walks}</span>
+            <span class="entry-stat">K: ${entry.strikeoutsPitching}</span>
+          `;
+        } else if (category === 'fielding') {
+          statsHtml = `
+            <span class="entry-stat">Put Outs: ${entry.putOuts || 0}</span>
+            <span class="entry-stat">Assists: ${entry.assists || 0}</span>
+            <span class="entry-stat">Errors: ${entry.errors || 0}</span>
+          `;
+        }
+        
+        return `
+          <div class="entry-card" data-id="${entry.__backendId}">
+            <div class="entry-date">${new Date(entry.date).toLocaleDateString()}</div>
+            <div class="entry-stats">${statsHtml}</div>
+            <button class="btn-delete" onclick="deleteEntry('${entry.__backendId}')">Delete</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function deleteEntry(backendId) {
+      const entry = allData.find(d => d.__backendId === backendId);
+      if (!entry) return;
+      
+      const card = document.querySelector(`[data-id="${backendId}"]`);
+      const deleteBtn = card.querySelector('.btn-delete');
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting...';
+      
+      const result = await window.dataSdk.delete(entry);
+      
+      if (!result.isOk) {
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete';
+      }
+    }
+
+    window.deleteEntry = deleteEntry;
+
+    initializeApp();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a224fbc06a72eff',t:'MTc2Mzc1MDM4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
